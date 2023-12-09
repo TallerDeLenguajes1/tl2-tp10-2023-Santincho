@@ -8,5 +8,6 @@ public interface IUsuarioRepository
     public void UpdateUser(Usuario user);
     public List<Usuario> UsersList();
     public Usuario GetUserById(int id);
+    public Usuario GetByUsername(string username);
     public void DeleteUserById(int id);
 }

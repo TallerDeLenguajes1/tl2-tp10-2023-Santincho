@@ -3,6 +3,7 @@ using kanban.Models;
 using kanban.Repository;
 using Microsoft.AspNetCore.Mvc;
 using tl2_tp10_2023_Santincho.Models;
+using kanban.ViewModels;
 
 namespace tl2_tp10_2023_Santincho.Controllers;
 
@@ -18,16 +19,21 @@ public class UsuarioController : Controller
     }
 
     [HttpPost("crearUsuario")]
-    public IActionResult CrearUsuario([FromForm] Usuario user)
+    public IActionResult CrearUsuario([FromForm] CrearUsuarioViewModel user)
     {
-        usuarioRepository.CreateUser(user);
+        Usuario usuario = new() {
+            NombreDeUsuario = user.NombreDeUsuario,
+            Contrasenia = user.Contrasena,
+            Rol = user.Rol
+        };
+        usuarioRepository.CreateUser(usuario);
         return RedirectToAction("Index");
     }
 
     [HttpGet("crearUsuario")]
     public IActionResult CrearUsuario()
     {
-        return View(new Usuario());
+        return View(new CrearUsuarioViewModel());
     }
 
     [HttpGet]
@@ -35,7 +41,19 @@ public class UsuarioController : Controller
     {
         List<Usuario> users = usuarioRepository.UsersList();
 
-        return View(users);
+        List<ListarUsuariosViewModel> usuarios = new();
+
+        foreach (var user in users)
+        {
+            ListarUsuariosViewModel usuario = new() {
+                Id = user.Id,
+                NombreDeUsuario = user.NombreDeUsuario,
+                Rol = user.Rol
+            };
+            usuarios.Add(usuario);
+        }
+
+        return View(usuarios);
     }
 
     [HttpPost("eliminar/{id}")]
@@ -59,11 +77,19 @@ public class UsuarioController : Controller
         {
             return NotFound($"No se encontró el usuario con ID {id}");
         }
-        return View(user);
+
+        ModificarUsuarioViewModel usuario = new() {
+            Id = user.Id,
+            NombreDeUsuario = user.NombreDeUsuario,
+            Contrasena = user.Contrasenia,
+            Rol = user.Rol
+        };
+
+        return View(usuario);
     }
 
     [HttpPost("editarUsuario/{id}")]
-    public IActionResult Editar(int id, [FromForm] Usuario newUser)
+    public IActionResult Editar(int id, [FromForm] ModificarUsuarioViewModel newUser)
     {
         var existingBoard = usuarioRepository.GetUserById(id);
 
@@ -72,7 +98,13 @@ public class UsuarioController : Controller
             return NotFound($"No se encontró el tablero con ID {id}");
         }
 
-        usuarioRepository.UpdateUser(newUser);
+        Usuario newUsuario = new() {
+            NombreDeUsuario = newUser.NombreDeUsuario,
+            Contrasenia = newUser.Contrasena,
+            Rol = newUser.Rol
+        };
+
+        usuarioRepository.UpdateUser(newUsuario);
 
         return RedirectToAction("Index");
     }

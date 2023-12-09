@@ -2,8 +2,8 @@
     ViewData["Title"] = "Tableros";
 }
 
-@using kanban.Models
-@model List<Tablero>
+@using kanban.ViewModels
+@model List<ListarTablerosViewModel>
 
 <h2>Tableros</h2>
 <a asp-controller="Tablero" asp-action="Crear">Crear Tablero</a>
@@ -26,7 +26,7 @@
         {
             <tr>
                 <td hidden>@tablero.Id</td>
-                <td>@tablero.IdUsuarioPropietario</td>
+                <td>@tablero.UsuarioPropietario</td>
                 <td>@tablero.Nombre</td>
                 <td>@tablero.Descripcion</td>
                 <td>

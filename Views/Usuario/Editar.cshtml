@@ -1,4 +1,5 @@
-@model kanban.Models.Usuario
+@using kanban.Models
+@model kanban.ViewModels.ModificarUsuarioViewModel
 
 @{
     ViewData["Title"] = "Editar Usuario";
@@ -12,6 +13,16 @@
     <div class="form-group">
         <label asp-for="NombreDeUsuario">Nombre:</label>
         <input asp-for="NombreDeUsuario" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label asp-for="Contrasena">Contraseña:</label>
+        <input type="password" asp-for="Contrasena" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label asp-for="Rol">Rol:</label>
+        <select asp-for="Rol" asp-items="Html.GetEnumSelectList<Roles>()">
+            <option value="">Selecciona un estado</option>
+        </select>
     </div>
     <button type="submit" class="btn btn-primary">Guardar Cambios</button>
 </form>
