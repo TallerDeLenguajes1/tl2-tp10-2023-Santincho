@@ -10,24 +10,25 @@ namespace tl2_tp10_2023_Santincho.Controllers;
 
 public class UsuarioController : Controller
 {
-    private readonly IUsuarioRepository usuarioRepository;
+    private readonly IUsuarioRepository _usuarioRepository;
     private readonly ILogger<UsuarioController> _logger;
 
-    public UsuarioController(ILogger<UsuarioController> logger)
+    public UsuarioController(ILogger<UsuarioController> logger, IUsuarioRepository usuarioRepository)
     {
         _logger = logger;
-        usuarioRepository = new UsuarioRepository();
+        _usuarioRepository = new UsuarioRepository();
     }
 
     [HttpPost("crearUsuario")]
     public IActionResult CrearUsuario([FromForm] CrearUsuarioViewModel user)
     {
+        if(!ModelState.IsValid) return RedirectToAction("Index", "Home");
         Usuario usuario = new() {
             NombreDeUsuario = user.NombreDeUsuario,
             Contrasenia = user.Contrasena,
             Rol = user.Rol
         };
-        usuarioRepository.CreateUser(usuario);
+        _usuarioRepository.CreateUser(usuario);
         return RedirectToAction("Index");
     }
 
@@ -46,7 +47,7 @@ public class UsuarioController : Controller
     {
         if (LoginHelper.IsLogged(HttpContext))
         {
-            List<Usuario> users = usuarioRepository.UsersList();
+            List<Usuario> users = _usuarioRepository.UsersList();
 
             List<ListarUsuariosViewModel> usuarios = new();
 
@@ -70,11 +71,11 @@ public class UsuarioController : Controller
     {
         if (LoginHelper.IsLogged(HttpContext))
         {
-            var user = usuarioRepository.GetUserById(id);
+            var user = _usuarioRepository.GetUserById(id);
 
             if (user.Id == 0) return NotFound($"No existe el usuario con ID {id}");
 
-            usuarioRepository.DeleteUserById(id);
+            _usuarioRepository.DeleteUserById(id);
 
             return RedirectToAction("Index");
         }
@@ -86,7 +87,7 @@ public class UsuarioController : Controller
     {
         if (LoginHelper.IsLogged(HttpContext))
         {
-            var user = usuarioRepository.GetUserById(id);
+            var user = _usuarioRepository.GetUserById(id);
 
             if (user.Id == 0)
             {
@@ -108,9 +109,10 @@ public class UsuarioController : Controller
     [HttpPost("editarUsuario/{id}")]
     public IActionResult Editar(int id, [FromForm] ModificarUsuarioViewModel newUser)
     {
+        if(!ModelState.IsValid) return RedirectToAction("Index", "Home");
         if (LoginHelper.IsLogged(HttpContext))
         {
-            var existingBoard = usuarioRepository.GetUserById(id);
+            var existingBoard = _usuarioRepository.GetUserById(id);
 
             if (existingBoard.Id == 0)
             {
@@ -123,7 +125,7 @@ public class UsuarioController : Controller
                 Rol = newUser.Rol
             };
 
-            usuarioRepository.UpdateUser(newUsuario);
+            _usuarioRepository.UpdateUser(newUsuario);
 
             return RedirectToAction("Index");
         }
