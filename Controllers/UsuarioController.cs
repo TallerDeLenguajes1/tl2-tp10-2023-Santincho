@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using kanban.Models;
 using kanban.Repository;
+using kanban.Controllers.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using tl2_tp10_2023_Santincho.Models;
 using kanban.ViewModels;
@@ -33,79 +34,99 @@ public class UsuarioController : Controller
     [HttpGet("crearUsuario")]
     public IActionResult CrearUsuario()
     {
-        return View(new CrearUsuarioViewModel());
+        if (LoginHelper.IsLogged(HttpContext))
+        {
+            return View(new CrearUsuarioViewModel());
+        }
+        return RedirectToAction("Index", "Login");
     }
 
     [HttpGet]
     public IActionResult Index()
     {
-        List<Usuario> users = usuarioRepository.UsersList();
-
-        List<ListarUsuariosViewModel> usuarios = new();
-
-        foreach (var user in users)
+        if (LoginHelper.IsLogged(HttpContext))
         {
-            ListarUsuariosViewModel usuario = new() {
-                Id = user.Id,
-                NombreDeUsuario = user.NombreDeUsuario,
-                Rol = user.Rol
-            };
-            usuarios.Add(usuario);
-        }
+            List<Usuario> users = usuarioRepository.UsersList();
 
-        return View(usuarios);
+            List<ListarUsuariosViewModel> usuarios = new();
+
+            foreach (var user in users)
+            {
+                ListarUsuariosViewModel usuario = new() {
+                    Id = user.Id,
+                    NombreDeUsuario = user.NombreDeUsuario,
+                    Rol = user.Rol
+                };
+                usuarios.Add(usuario);
+            }
+
+            return View(usuarios);
+        }
+        return RedirectToAction("Index", "Login");
     }
 
     [HttpPost("eliminar/{id}")]
     public IActionResult Eliminar(int id)
     {
-        var user = usuarioRepository.GetUserById(id);
+        if (LoginHelper.IsLogged(HttpContext))
+        {
+            var user = usuarioRepository.GetUserById(id);
 
-        if (user.Id == 0) return NotFound($"No existe el usuario con ID {id}");
+            if (user.Id == 0) return NotFound($"No existe el usuario con ID {id}");
 
-        usuarioRepository.DeleteUserById(id);
+            usuarioRepository.DeleteUserById(id);
 
-        return RedirectToAction("Index");
+            return RedirectToAction("Index");
+        }
+        return RedirectToAction("Index", "Login");
     }
 
     [HttpGet("editarUsuario/{id}")]
     public IActionResult Editar(int id)
     {
-        var user = usuarioRepository.GetUserById(id);
-
-        if (user.Id == 0)
+        if (LoginHelper.IsLogged(HttpContext))
         {
-            return NotFound($"No se encontró el usuario con ID {id}");
+            var user = usuarioRepository.GetUserById(id);
+
+            if (user.Id == 0)
+            {
+                return NotFound($"No se encontró el usuario con ID {id}");
+            }
+
+            ModificarUsuarioViewModel usuario = new() {
+                Id = user.Id,
+                NombreDeUsuario = user.NombreDeUsuario,
+                Contrasena = user.Contrasenia,
+                Rol = user.Rol
+            };
+
+            return View(usuario);
         }
-
-        ModificarUsuarioViewModel usuario = new() {
-            Id = user.Id,
-            NombreDeUsuario = user.NombreDeUsuario,
-            Contrasena = user.Contrasenia,
-            Rol = user.Rol
-        };
-
-        return View(usuario);
+        return RedirectToAction("Index", "Login");
     }
 
     [HttpPost("editarUsuario/{id}")]
     public IActionResult Editar(int id, [FromForm] ModificarUsuarioViewModel newUser)
     {
-        var existingBoard = usuarioRepository.GetUserById(id);
-
-        if (existingBoard.Id == 0)
+        if (LoginHelper.IsLogged(HttpContext))
         {
-            return NotFound($"No se encontró el tablero con ID {id}");
+            var existingBoard = usuarioRepository.GetUserById(id);
+
+            if (existingBoard.Id == 0)
+            {
+                return NotFound($"No se encontró el tablero con ID {id}");
+            }
+
+            Usuario newUsuario = new() {
+                NombreDeUsuario = newUser.NombreDeUsuario,
+                Contrasenia = newUser.Contrasena,
+                Rol = newUser.Rol
+            };
+
+            usuarioRepository.UpdateUser(newUsuario);
+
+            return RedirectToAction("Index");
         }
-
-        Usuario newUsuario = new() {
-            NombreDeUsuario = newUser.NombreDeUsuario,
-            Contrasenia = newUser.Contrasena,
-            Rol = newUser.Rol
-        };
-
-        usuarioRepository.UpdateUser(newUsuario);
-
-        return RedirectToAction("Index");
+        return RedirectToAction("Index", "Login");
     }
 }

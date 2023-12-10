@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using kanban.Models;
 using kanban.Repository;
+using kanban.Controllers.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using tl2_tp10_2023_Santincho.Models;
 using kanban.ViewModels;
@@ -38,74 +39,132 @@ public class TareaController : Controller
     [HttpGet("crearTarea")]
     public IActionResult Crear(int boardId)
     {
-        Tarea tarea = new()
+        if (LoginHelper.IsLogged(HttpContext))
         {
-            IdTablero = boardId
-        };
+            Tarea tarea = new()
+            {
+                IdTablero = boardId
+            };
 
-        CrearTareaViewModel task = new(){
-            IdTablero = tarea.IdTablero
-        };
+            CrearTareaViewModel task = new(){
+                IdTablero = tarea.IdTablero
+            };
 
-        return View(task);
+            return View(task);
+        }
+        return RedirectToAction("Index", "Login");
     }
 
     [HttpGet]
     public IActionResult Index()
     {
-        List<Tarea> tasks = tareaRepository.ListTareas();
-
-        List<ListarTareasViewModel> tareas = new();
-
-        foreach (var task in tasks)
+        if (LoginHelper.IsLogged(HttpContext))
         {
-            ListarTareasViewModel tarea = new(){
-                Id = task.Id,
-                IdTablero = task.IdTablero,
-                Estado = task.Estado,
-                Nombre = task.Nombre,
-                Descripcion = task.Descripcion,
-                Color = task.Color
-            };
-            tareas.Add(tarea);
-        }
+            List<Tarea> tasks = tareaRepository.ListTareas();
 
-        return View(tareas);
+            List<ListarTareasViewModel> tareas = new();
+
+            foreach (var task in tasks)
+            {
+                ListarTareasViewModel tarea = new(){
+                    Id = task.Id,
+                    IdTablero = task.IdTablero,
+                    Estado = task.Estado,
+                    Nombre = task.Nombre,
+                    Descripcion = task.Descripcion,
+                    Color = task.Color
+                };
+                tareas.Add(tarea);
+            }
+
+            return View(tareas);
+        }
+        return RedirectToAction("Index", "Login");
     } 
 
     [HttpGet("Tablero/{boardId}")]
     public IActionResult ListByBoard(int boardId)
     {
-        List<Tarea> tasks = tareaRepository.GetTasksByBoard(boardId);
-
-        List<ListarTareasViewModel> tareas = new();
-
-        foreach (var task in tasks)
+        if (LoginHelper.IsLogged(HttpContext))
         {
-            ListarTareasViewModel tarea = new(){
-                Id = task.Id,
-                IdTablero = task.IdTablero,
-                Estado = task.Estado,
-                Nombre = task.Nombre,
-                Descripcion = task.Descripcion,
-                Color = task.Color
-            };
-            tareas.Add(tarea);
-        }
+            List<Tarea> tasks = tareaRepository.GetTasksByBoard(boardId);
 
-        return View(tasks);
+            List<ListarTareasViewModel> tareas = new();
+
+            foreach (var task in tasks)
+            {
+                ListarTareasViewModel tarea = new(){
+                    Id = task.Id,
+                    IdTablero = task.IdTablero,
+                    Estado = task.Estado,
+                    Nombre = task.Nombre,
+                    Descripcion = task.Descripcion,
+                    Color = task.Color
+                };
+                tareas.Add(tarea);
+            }
+
+            return View(tasks);
+        }
+        return RedirectToAction("Index", "Login");
     }
 
     [HttpGet("Usuario/{userId}")]
     public IActionResult ListByUser(int userId)
     {
-        List<Tarea> tasks = tareaRepository.GetTasksByUser(userId);
-
-        List<ListarTareasViewModel> tareas = new();
-
-        foreach (var task in tasks)
+        if (LoginHelper.IsLogged(HttpContext))
         {
-            ListarTareasViewModel tarea = new(){
+            List<Tarea> tasks = tareaRepository.GetTasksByUser(userId);
+
+            List<ListarTareasViewModel> tareas = new();
+
+            foreach (var task in tasks)
+            {
+                ListarTareasViewModel tarea = new(){
+                    Id = task.Id,
+                    IdTablero = task.IdTablero,
+                    Estado = task.Estado,
+                    Nombre = task.Nombre,
+                    Descripcion = task.Descripcion,
+                    Color = task.Color
+                };
+                tareas.Add(tarea);
+            }
+
+            return View(tasks);
+        }
+        return RedirectToAction("Index", "Login");
+    } 
+
+    [HttpPost("eliminarTarea/{id}")]
+    public IActionResult Eliminar(int id)
+    {
+        if (LoginHelper.IsLogged(HttpContext))
+        {
+            var task = tareaRepository.GetTaskById(id);
+
+            if (task.Id == 0) return NotFound($"No existe el tablero con ID {id}");
+
+            tareaRepository.DeleteTaskById(id);
+
+            return RedirectToAction("Index");
+        }
+        return RedirectToAction("Index", "Login");
+    }
+
+    [HttpGet("editarTarea/{id}")]
+    public IActionResult Editar(int id)
+    {
+        if (LoginHelper.IsLogged(HttpContext))
+        {
+            var task = tareaRepository.GetTaskById(id);
+
+            if (task.Id == 0)
+            {
+                return NotFound($"No se encontró el tablero con ID {id}");
+            }
+
+            ModificarTareaViewModel tarea = new(){
                 Id = task.Id,
                 IdTablero = task.IdTablero,
                 Estado = task.Estado,
@@ -113,69 +172,39 @@ public class TareaController : Controller
                 Descripcion = task.Descripcion,
                 Color = task.Color
             };
-            tareas.Add(tarea);
+
+            return View(tarea);
         }
-
-        return View(tasks);
-    } 
-
-    [HttpPost("eliminarTarea/{id}")]
-    public IActionResult Eliminar(int id)
-    {
-        var task = tareaRepository.GetTaskById(id);
-
-        if (task.Id == 0) return NotFound($"No existe el tablero con ID {id}");
-
-        tareaRepository.DeleteTaskById(id);
-
-        return RedirectToAction("Index");
-    }
-
-    [HttpGet("editarTarea/{id}")]
-    public IActionResult Editar(int id)
-    {
-        var task = tareaRepository.GetTaskById(id);
-
-        if (task.Id == 0)
-        {
-            return NotFound($"No se encontró el tablero con ID {id}");
-        }
-
-        ModificarTareaViewModel tarea = new(){
-            Id = task.Id,
-            IdTablero = task.IdTablero,
-            Estado = task.Estado,
-            Nombre = task.Nombre,
-            Descripcion = task.Descripcion,
-            Color = task.Color
-        };
-
-        return View(tarea);
+        return RedirectToAction("Index", "Login");
     }
 
     [HttpPost("editarTarea/{id}")]
     public IActionResult Editar(int id, [FromForm] ModificarTareaViewModel newTarea)
     {
-        Tarea newTask = new(){
-            Id = newTarea.Id,
-            IdTablero = newTarea.IdTablero,
-            Color = newTarea.Color,
-            Nombre = newTarea.Nombre,
-            Descripcion = newTarea.Descripcion,
-            Estado = newTarea.Estado,
-            IdUsuarioAsignado = newTarea.IdUsuarioAsignado,
-
-        };
-        
-        var existingTask = tareaRepository.GetTaskById(id);
-
-        if (existingTask.Id == 0)
+        if (LoginHelper.IsLogged(HttpContext))
         {
-            return NotFound($"No se encontró el tablero con ID {id}");
+            Tarea newTask = new(){
+                Id = newTarea.Id,
+                IdTablero = newTarea.IdTablero,
+                Color = newTarea.Color,
+                Nombre = newTarea.Nombre,
+                Descripcion = newTarea.Descripcion,
+                Estado = newTarea.Estado,
+                IdUsuarioAsignado = newTarea.IdUsuarioAsignado,
+
+            };
+            
+            var existingTask = tareaRepository.GetTaskById(id);
+
+            if (existingTask.Id == 0)
+            {
+                return NotFound($"No se encontró el tablero con ID {id}");
+            }
+
+            tareaRepository.UpdateTask(id, newTask);
+
+            return RedirectToAction("Index");
         }
-
-        tareaRepository.UpdateTask(id, newTask);
-
-        return RedirectToAction("Index");
+        return RedirectToAction("Index", "Login");
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using kanban.Controllers.Helpers;
 using tl2_tp10_2023_Santincho.Models;
 
 namespace tl2_tp10_2023_Santincho.Controllers;
@@ -15,12 +16,14 @@ public class HomeController : Controller
 
     public IActionResult Index()
     {
-        return View();
+        if (LoginHelper.IsLogged(HttpContext)) return View();
+        return RedirectToAction("Index", "Login");
     }
 
     public IActionResult Privacy()
     {
-        return View();
+        if (LoginHelper.IsLogged(HttpContext)) return View();
+        return RedirectToAction("Index", "Login");
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

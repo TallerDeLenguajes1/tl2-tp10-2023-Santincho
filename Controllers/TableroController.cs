@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using kanban.Models;
 using kanban.Repository;
+using kanban.Controllers.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using tl2_tp10_2023_Santincho.Models;
 using kanban.ViewModels;
@@ -23,12 +24,17 @@ public class TableroController : Controller
     [HttpPost("crearTablero")]
     public IActionResult Crear([FromForm] CrearTableroViewModel board)
     {
+        if (!LoginHelper.IsLogged(HttpContext)) return RedirectToAction("Index", "Login");
+
         Tablero tablero = new() {
-            IdUsuarioPropietario = board.IdUsuarioPropietario,
             Nombre = board.Nombre,
             Descripcion = board.Descripcion,
-            isAdmin = board.IsAdmin
         };
+
+        if (!LoginHelper.IsAdmin(HttpContext))
+        {
+            tablero.IdUsuarioPropietario = int.Parse(LoginHelper.GetUserId(HttpContext));
+        }
 
         tableroRepository.CreateBoard(tablero);
 
@@ -38,13 +44,27 @@ public class TableroController : Controller
     [HttpGet("crearTablero")]
     public IActionResult Crear()
     {
-        return View(new CrearTableroViewModel());
+        if (!LoginHelper.IsLogged(HttpContext)) return RedirectToAction("Index", "Login");
+
+        CrearTableroViewModel crearTableroViewModel = new() {
+            IsAdmin = LoginHelper.IsAdmin(HttpContext)
+        };
+        return View(crearTableroViewModel);
     }
 
     [HttpGet]
     public IActionResult Index()
     {
-        List<Tablero> boards = tableroRepository.ListBoards();
+        if (!LoginHelper.IsLogged(HttpContext)) return RedirectToAction("Index", "Login");
+
+        List<Tablero> boards = new();
+
+        ViewBag.EsAdmin = LoginHelper.IsAdmin(HttpContext);
+        
+        if (ViewBag.EsAdmin) boards = tableroRepository.ListBoards();
+
+        else boards = tableroRepository.GetBoardsByUser(int.Parse(LoginHelper.GetUserId(HttpContext)));
+
         List<ListarTablerosViewModel> tableros = new();
 
         foreach (var board in boards)
@@ -52,24 +72,45 @@ public class TableroController : Controller
             ListarTablerosViewModel tablero = new(board.Nombre, board.Descripcion, board.Id, board.IdUsuarioPropietario);
             tableros.Add(tablero);
         }
+
         return View(tableros);
     }
 
     [HttpPost("eliminarTablero/{id}")]
     public IActionResult Eliminar(int id)
     {
+        if (!LoginHelper.IsLogged(HttpContext)) return RedirectToAction("Index", "Login");
+
         var board = tableroRepository.GetTableroById(id);
 
         if (board.Id == 0) return NotFound($"No existe el tablero con ID {id}");
-
-        var tasksToDelete = tareaRepository.GetTasksByBoard(id);
-
-        foreach (var task in tasksToDelete)
+        
+        if (!LoginHelper.IsAdmin(HttpContext))
         {
-            tareaRepository.DeleteTaskById(task.Id);
-        }
+            var userBoards = tableroRepository.GetBoardsByUser(int.Parse(LoginHelper.GetUserId(HttpContext)));
+            var foundBoard = userBoards.Find(board => board.Id == id);
 
-        tableroRepository.DeleteBoardById(id);
+            if (foundBoard != null)
+            {
+                var tasks = tareaRepository.GetTasksByBoard(id);
+                foreach (var task in tasks)
+                {
+                    tareaRepository.DeleteTaskById(task.Id);
+                }
+                tableroRepository.DeleteBoardById(id);
+            } else {
+                return NotFound($"No existe el tablero con ID {id}");
+            }
+        } else {
+            var tasksToDelete = tareaRepository.GetTasksByBoard(id);
+
+            foreach (var task in tasksToDelete)
+            {
+                tareaRepository.DeleteTaskById(task.Id);
+            }
+
+            tableroRepository.DeleteBoardById(id);
+        }
 
         return RedirectToAction("Index");
     }
@@ -77,6 +118,7 @@ public class TableroController : Controller
     [HttpGet("editarTablero/{id}")]
     public IActionResult Editar(int id)
     {
+        if (!LoginHelper.IsLogged(HttpContext)) return RedirectToAction("Index", "Login");
         var board = tableroRepository.GetTableroById(id);
 
         if (board.Id == 0)
@@ -85,11 +127,20 @@ public class TableroController : Controller
         }
 
         ModificarTableroViewModel tablero = new(){
-            IdUsuarioPropietario = board.IdUsuarioPropietario,
             Nombre = board.Nombre,
             Descripcion = board.Descripcion,
             Id = board.Id
         };
+
+        if (!LoginHelper.IsAdmin(HttpContext))
+        {
+            var userBoards = tableroRepository.GetBoardsByUser(int.Parse(LoginHelper.GetUserId(HttpContext)));
+            var foundBoard = userBoards.Find(board => board.Id == id);
+            if (foundBoard == null) return NotFound($"No se encontró el tablero con ID {id}");
+        } else
+        {
+            tablero.IdUsuarioPropietario = board.IdUsuarioPropietario;
+        }
 
         return View(tablero);
     }
@@ -97,6 +148,8 @@ public class TableroController : Controller
     [HttpPost("editarTablero/{id}")]
     public IActionResult Editar(int id, [FromForm] ModificarTableroViewModel newBoard)
     {
+        if (!LoginHelper.IsLogged(HttpContext)) return RedirectToAction("Index", "Login");
+
         var existingBoard = tableroRepository.GetTableroById(id);
 
         if (existingBoard.Id == 0)
@@ -105,10 +158,18 @@ public class TableroController : Controller
         }
 
         Tablero newtTablero = new() {
-            IdUsuarioPropietario = newBoard.IdUsuarioPropietario,
+            IdUsuarioPropietario = newBoard.IdUsuarioPropietario == 0 ? existingBoard.IdUsuarioPropietario : newBoard.IdUsuarioPropietario,
             Nombre = newBoard.Nombre,
             Descripcion = newBoard.Descripcion,
         };
+
+        if (!LoginHelper.IsAdmin(HttpContext))
+        {
+            var userBoards = tableroRepository.GetBoardsByUser(int.Parse(LoginHelper.GetUserId(HttpContext)));
+            var foundBoard = userBoards.Find(board => board.Id == id);
+            if (foundBoard == null) return NotFound($"No se encontró el tablero con ID {id}");
+            else newtTablero.IdUsuarioPropietario = int.Parse(LoginHelper.GetUserId(HttpContext));
+        }
 
         tableroRepository.ModifyBoardById(id, newtTablero);
 
