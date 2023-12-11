@@ -5,10 +5,13 @@ namespace kanban.Repository;
 
 public class TareaRepository : ITareaRepository
 {
-    private readonly string connectionString = "Data Source=DB/kanban.db;Cache=Shared";
+    private readonly string? _connectionString;
+    public TareaRepository (string connectionString) {
+        _connectionString = connectionString;
+    }
     public Tarea CreateTask(int boardId, Tarea task) {
         var query = $"INSERT INTO tarea (id_tablero, nombre, estado, descripcion, color, id_usuario_asignado) VALUES (@id_tablero, @name, @estado, @descripcion, @color, @usuario)";
-        using var connection = new SQLiteConnection(connectionString);
+        using var connection = new SQLiteConnection(_connectionString);
         connection.Open();
         var command = new SQLiteCommand(query, connection);
 
@@ -19,14 +22,15 @@ public class TareaRepository : ITareaRepository
         command.Parameters.Add(new SQLiteParameter("@color", task.Color));
         command.Parameters.Add(new SQLiteParameter("@usuario", task.IdUsuarioAsignado));
 
-        command.ExecuteNonQuery();
+        var affectedrows = command.ExecuteNonQuery();
+        if (affectedrows == 0) throw new Exception("Se produjo un error al crear la tarea");
 
         connection.Close();
         return task;
     }
     public void UpdateTask(int taskId, Tarea task) {
         var queryString = @"UPDATE tarea SET nombre = @name, estado = @status, descripcion = @description, color = @color WHERE id = @taskId";
-        using var connection = new SQLiteConnection(connectionString);
+        using var connection = new SQLiteConnection(_connectionString);
         connection.Open();
         var command = new SQLiteCommand(queryString, connection);
 
@@ -36,14 +40,15 @@ public class TareaRepository : ITareaRepository
         command.Parameters.Add(new SQLiteParameter("@description", task.Descripcion));
         command.Parameters.Add(new SQLiteParameter("@color", task.Color));
         
-        command.ExecuteNonQuery();
+        var affectedrows = command.ExecuteNonQuery();
+        if (affectedrows == 0) throw new Exception("Se produjo un error al modificar la tarea");
 
         connection.Close();
     }
 
     public Tarea GetTaskById(int id) {
         var task = new Tarea();
-        using var connection = new SQLiteConnection(connectionString);
+        using var connection = new SQLiteConnection(_connectionString);
         var command = connection.CreateCommand();
         connection.Open();
         command.CommandText = "SELECT * FROM tarea WHERE id = @idTask";
@@ -61,6 +66,7 @@ public class TareaRepository : ITareaRepository
                 task.IdUsuarioAsignado = Convert.ToInt32(reader["id_usuario_asignado"]);
             }
         }
+        if (task.Id == 0) throw new Exception("Error al encontrar la tarea");
         connection.Close();
         return task;
     }
@@ -68,7 +74,7 @@ public class TareaRepository : ITareaRepository
     public List<Tarea> GetTasksByUser(int userId) {
         var tasks = new List<Tarea>();
         var query =  @"SELECT * FROM tarea WHERE id_usuario_asignado = @userId";
-        using (var connection = new SQLiteConnection(connectionString))
+        using (var connection = new SQLiteConnection(_connectionString))
         {
             var command = new SQLiteCommand(query, connection);
             command.Parameters.Add(new SQLiteParameter("@userId", userId));
@@ -92,6 +98,7 @@ public class TareaRepository : ITareaRepository
                 }
             }
             connection.Close();
+            if (tasks.Count == 0 && !TasksExistInDatabase()) throw new Exception("No se pudo conseguir la lista de tareas");
         }
         return tasks;
     }
@@ -99,7 +106,7 @@ public class TareaRepository : ITareaRepository
     public List<Tarea> GetTasksByBoard(int boardId) {
         var tasks = new List<Tarea>();
         var query =  @"SELECT * FROM tarea WHERE id_tablero = @boardId";
-        using (var connection = new SQLiteConnection(connectionString))
+        using (var connection = new SQLiteConnection(_connectionString))
         {
             var command = new SQLiteCommand(query, connection);
             command.Parameters.Add(new SQLiteParameter("@boardId", boardId));
@@ -123,30 +130,33 @@ public class TareaRepository : ITareaRepository
                 }
             }
             connection.Close();
+            if (tasks.Count == 0 && !TasksExistInDatabase()) throw new Exception("No se pudo conseguir la lista de tareas");
         }
         return tasks;
     }
 
     public void DeleteTaskById(int id) {
-        using var connection = new SQLiteConnection(connectionString);
+        using var connection = new SQLiteConnection(_connectionString);
         connection.Open();
         using var command = connection.CreateCommand();
         command.CommandText = "DELETE FROM tarea WHERE id = @taskId";
         command.Parameters.Add(new SQLiteParameter("@taskId", id));
-        command.ExecuteNonQuery();
+        var affectedrows = command.ExecuteNonQuery();
+        if (affectedrows == 0) throw new Exception("Se produjo un error al eliminar la tarea");
         connection.Close();
     }
 
     public void AssingUserToTask(int userId, int taskId) {
         var queryString = @"UPDATE tarea SET id_usuario_asignado = @userId WHERE id = @taskId";
-        using var connection = new SQLiteConnection(connectionString);
+        using var connection = new SQLiteConnection(_connectionString);
         connection.Open();
         var command = new SQLiteCommand(queryString, connection);
 
         command.Parameters.Add(new SQLiteParameter("@taskId", taskId));
         command.Parameters.Add(new SQLiteParameter("@userId", userId));
         
-        command.ExecuteNonQuery();
+        var affectedrows = command.ExecuteNonQuery();
+        if (affectedrows == 0) throw new Exception("Se produjo un error al asignar la tarea");
 
         connection.Close();
     }
@@ -154,7 +164,7 @@ public class TareaRepository : ITareaRepository
     public List<Tarea> ListTareas() {
         var tasks = new List<Tarea>();
         var query =  @"SELECT * FROM tarea";
-        using (var connection = new SQLiteConnection(connectionString))
+        using (var connection = new SQLiteConnection(_connectionString))
         {
             var command = new SQLiteCommand(query, connection);
             connection.Open();
@@ -177,7 +187,25 @@ public class TareaRepository : ITareaRepository
                 }
             }
             connection.Close();
+            if (tasks.Count == 0 && !TasksExistInDatabase()) throw new Exception("No se pudo conseguir la lista de tareas");
         }
         return tasks;
+    }
+
+    private bool TasksExistInDatabase()
+    {
+        // Realiza una consulta para verificar si existen tableros en la base de datos
+        var query = @"SELECT COUNT(*) FROM tarea";
+        using (var connection = new SQLiteConnection(_connectionString))
+        {
+            var command = new SQLiteCommand(query, connection);
+            connection.Open();
+
+            int count = (int)command.ExecuteScalar();
+
+            connection.Close();
+
+            return count > 0;
+        }
     }
 }

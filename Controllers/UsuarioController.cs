@@ -16,119 +16,183 @@ public class UsuarioController : Controller
     public UsuarioController(ILogger<UsuarioController> logger, IUsuarioRepository usuarioRepository)
     {
         _logger = logger;
-        _usuarioRepository = new UsuarioRepository();
+        _usuarioRepository = usuarioRepository;
     }
 
     [HttpPost("crearUsuario")]
     public IActionResult CrearUsuario([FromForm] CrearUsuarioViewModel user)
     {
         if(!ModelState.IsValid) return RedirectToAction("Index", "Home");
-        Usuario usuario = new() {
-            NombreDeUsuario = user.NombreDeUsuario,
-            Contrasenia = user.Contrasena,
-            Rol = user.Rol
-        };
-        _usuarioRepository.CreateUser(usuario);
-        return RedirectToAction("Index");
+        try
+        {
+            Usuario usuario = new() {
+                NombreDeUsuario = user.NombreDeUsuario,
+                Contrasenia = user.Contrasena,
+                Rol = user.Rol
+            };
+            _usuarioRepository.CreateUser(usuario);
+            return RedirectToAction("Index");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex.ToString());
+            TempData["ErrorMessage"] = ex.Message;
+            TempData["StackTrace"] = ex.StackTrace;
+            return RedirectToAction("Error", "Home");
+        }
+        
     }
 
     [HttpGet("crearUsuario")]
     public IActionResult CrearUsuario()
     {
-        if (LoginHelper.IsLogged(HttpContext))
+        try
         {
-            return View(new CrearUsuarioViewModel());
+            if (LoginHelper.IsLogged(HttpContext))
+            {
+                return View(new CrearUsuarioViewModel());
+            }
+            return RedirectToAction("Index", "Login");
         }
-        return RedirectToAction("Index", "Login");
+        catch (Exception ex)
+        {
+            _logger.LogError(ex.ToString());
+            TempData["ErrorMessage"] = ex.Message;
+            TempData["StackTrace"] = ex.StackTrace;
+            return RedirectToAction("Error", "Home");
+        }
+        
     }
 
     [HttpGet]
     public IActionResult Index()
     {
-        if (LoginHelper.IsLogged(HttpContext))
+        try
         {
-            List<Usuario> users = _usuarioRepository.UsersList();
-
-            List<ListarUsuariosViewModel> usuarios = new();
-
-            foreach (var user in users)
+            if (LoginHelper.IsLogged(HttpContext))
             {
-                ListarUsuariosViewModel usuario = new() {
-                    Id = user.Id,
-                    NombreDeUsuario = user.NombreDeUsuario,
-                    Rol = user.Rol
-                };
-                usuarios.Add(usuario);
-            }
+                List<Usuario> users = _usuarioRepository.UsersList();
 
-            return View(usuarios);
+                List<ListarUsuariosViewModel> usuarios = new();
+
+                foreach (var user in users)
+                {
+                    ListarUsuariosViewModel usuario = new() {
+                        Id = user.Id,
+                        NombreDeUsuario = user.NombreDeUsuario,
+                        Rol = user.Rol
+                    };
+                    usuarios.Add(usuario);
+                }
+                return View(usuarios);
+            }
+            return RedirectToAction("Index", "Login");
         }
-        return RedirectToAction("Index", "Login");
+        catch (Exception ex)
+        {
+            _logger.LogError(ex.ToString());
+            TempData["ErrorMessage"] = ex.Message;
+            TempData["StackTrace"] = ex.StackTrace;
+            return RedirectToAction("Error", "Home");
+        }
     }
 
     [HttpPost("eliminar/{id}")]
     public IActionResult Eliminar(int id)
     {
-        if (LoginHelper.IsLogged(HttpContext))
+        try
         {
-            var user = _usuarioRepository.GetUserById(id);
+            if (LoginHelper.IsLogged(HttpContext))
+            {
+                var user = _usuarioRepository.GetUserById(id);
 
-            if (user.Id == 0) return NotFound($"No existe el usuario con ID {id}");
+                if (user.Id == 0) return NotFound($"No existe el usuario con ID {id}");
 
-            _usuarioRepository.DeleteUserById(id);
+                _usuarioRepository.DeleteUserById(id);
 
-            return RedirectToAction("Index");
+                return RedirectToAction("Index");
+            }
+            return RedirectToAction("Index", "Login");
         }
-        return RedirectToAction("Index", "Login");
+        catch (Exception ex)
+        {
+            _logger.LogError(ex.ToString());
+            TempData["ErrorMessage"] = ex.Message;
+            TempData["StackTrace"] = ex.StackTrace;
+            return RedirectToAction("Error", "Home");
+        }
+        
     }
 
     [HttpGet("editarUsuario/{id}")]
     public IActionResult Editar(int id)
     {
-        if (LoginHelper.IsLogged(HttpContext))
+        try
         {
-            var user = _usuarioRepository.GetUserById(id);
-
-            if (user.Id == 0)
+            if (LoginHelper.IsLogged(HttpContext))
             {
-                return NotFound($"No se encontró el usuario con ID {id}");
+                var user = _usuarioRepository.GetUserById(id);
+
+                if (user.Id == 0)
+                {
+                    return NotFound($"No se encontró el usuario con ID {id}");
+                }
+
+                ModificarUsuarioViewModel usuario = new() {
+                    Id = user.Id,
+                    NombreDeUsuario = user.NombreDeUsuario,
+                    Contrasena = user.Contrasenia,
+                    Rol = user.Rol
+                };
+
+                return View(usuario);
             }
-
-            ModificarUsuarioViewModel usuario = new() {
-                Id = user.Id,
-                NombreDeUsuario = user.NombreDeUsuario,
-                Contrasena = user.Contrasenia,
-                Rol = user.Rol
-            };
-
-            return View(usuario);
+            return RedirectToAction("Index", "Login");
         }
-        return RedirectToAction("Index", "Login");
+        catch (Exception ex)
+        {
+            _logger.LogError(ex.ToString());
+            TempData["ErrorMessage"] = ex.Message;
+            TempData["StackTrace"] = ex.StackTrace;
+            return RedirectToAction("Error", "Home");
+        }
+        
     }
 
     [HttpPost("editarUsuario/{id}")]
     public IActionResult Editar(int id, [FromForm] ModificarUsuarioViewModel newUser)
     {
         if(!ModelState.IsValid) return RedirectToAction("Index", "Home");
-        if (LoginHelper.IsLogged(HttpContext))
+        try
         {
-            var existingBoard = _usuarioRepository.GetUserById(id);
-
-            if (existingBoard.Id == 0)
+            if (LoginHelper.IsLogged(HttpContext))
             {
-                return NotFound($"No se encontró el tablero con ID {id}");
+                var existingBoard = _usuarioRepository.GetUserById(id);
+
+                if (existingBoard.Id == 0)
+                {
+                    return NotFound($"No se encontró el tablero con ID {id}");
+                }
+
+                Usuario newUsuario = new() {
+                    NombreDeUsuario = newUser.NombreDeUsuario,
+                    Contrasenia = newUser.Contrasena,
+                    Rol = newUser.Rol
+                };
+
+                _usuarioRepository.UpdateUser(newUsuario);
+
+                return RedirectToAction("Index");
             }
-
-            Usuario newUsuario = new() {
-                NombreDeUsuario = newUser.NombreDeUsuario,
-                Contrasenia = newUser.Contrasena,
-                Rol = newUser.Rol
-            };
-
-            _usuarioRepository.UpdateUser(newUsuario);
-
-            return RedirectToAction("Index");
+            return RedirectToAction("Index", "Login");
         }
-        return RedirectToAction("Index", "Login");
+        catch (Exception ex)
+        {
+            _logger.LogError(ex.ToString());
+            TempData["ErrorMessage"] = ex.Message;
+            TempData["StackTrace"] = ex.StackTrace;
+            return RedirectToAction("Error", "Home");
+        }
+        
     }
 }

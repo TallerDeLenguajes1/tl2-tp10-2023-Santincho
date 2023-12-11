@@ -16,7 +16,7 @@ public class TareaController : Controller
     public TareaController(ILogger<TareaController> logger, ITareaRepository tareaRepository)
     {
         _logger = logger;
-        _tareaRepository = new TareaRepository();
+        _tareaRepository = tareaRepository;
     }
 
     [HttpPost("crearTarea")]

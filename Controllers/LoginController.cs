@@ -13,7 +13,7 @@ public class LoginController : Controller
     public LoginController(ILogger<LoginController> logger, IUsuarioRepository usuarioRepository)
     {
         _logger = logger;
-        _usuarioRepository = new UsuarioRepository();
+        _usuarioRepository = usuarioRepository;
     }
     [HttpGet]
     public IActionResult Index()
@@ -32,6 +32,7 @@ public class LoginController : Controller
             var sessionUser = _usuarioRepository.GetUserById(int.Parse(sessionId));
             if (sessionUser.NombreDeUsuario == loginModel.Username)
             {
+                _logger.LogInformation($"El usuario {loginModel.Username} ingreso correctamente");
                 return RedirectToAction("Index", "Home");
             }
         }
@@ -41,10 +42,12 @@ public class LoginController : Controller
         if (userFound != null && userFound.Contrasenia == loginModel.Password)
         {
             LogInUser(userFound);
+            _logger.LogInformation($"El usuario {loginModel.Username} ingreso correctamente");
             return RedirectToAction("Index", "Home");
         }
         else
         {
+            _logger.LogInformation($"Intento de acceso invalido - Usuario: {loginModel.Username}  Clava ingresada: {loginModel.Password}");
             return View("Index");
         }
     }
