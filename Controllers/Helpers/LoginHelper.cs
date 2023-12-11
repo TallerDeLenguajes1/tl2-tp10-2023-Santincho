@@ -26,7 +26,7 @@ namespace kanban.Controllers.Helpers
 
         public static string? GetUserName(HttpContext context)
         {
-            return context.Session.GetString("usuario");
+            return context.Session.GetString("nombre_de_usuario");
         }
 
         public static string? GetUserRol(HttpContext context)

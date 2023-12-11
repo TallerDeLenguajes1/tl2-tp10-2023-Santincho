@@ -8,12 +8,12 @@ namespace kanban.Controllers;
 public class LoginController : Controller
 {
     private readonly ILogger<LoginController> _logger;
-    private readonly IUsuarioRepository usuarioRepository;
+    private readonly IUsuarioRepository _usuarioRepository;
 
-    public LoginController(ILogger<LoginController> logger)
+    public LoginController(ILogger<LoginController> logger, IUsuarioRepository usuarioRepository)
     {
         _logger = logger;
-        usuarioRepository = new UsuarioRepository();
+        _usuarioRepository = new UsuarioRepository();
     }
     [HttpGet]
     public IActionResult Index()
@@ -29,14 +29,14 @@ public class LoginController : Controller
 
         if (!string.IsNullOrEmpty(sessionUsername) && !string.IsNullOrEmpty(sessionId))
         {
-            var sessionUser = usuarioRepository.GetUserById(int.Parse(sessionId));
+            var sessionUser = _usuarioRepository.GetUserById(int.Parse(sessionId));
             if (sessionUser.NombreDeUsuario == loginModel.Username)
             {
                 return RedirectToAction("Index", "Home");
             }
         }
 
-        var userFound = usuarioRepository.GetByUsername(loginModel.Username);
+        var userFound = _usuarioRepository.GetByUsername(loginModel.Username);
 
         if (userFound != null && userFound.Contrasenia == loginModel.Password)
         {

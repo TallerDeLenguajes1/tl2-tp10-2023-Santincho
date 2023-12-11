@@ -10,13 +10,13 @@ namespace tl2_tp10_2023_Santincho.Controllers;
 
 public class TareaController : Controller
 {
-    private readonly ITareaRepository tareaRepository;
+    private readonly ITareaRepository _tareaRepository;
     private readonly ILogger<TareaController> _logger;
 
-    public TareaController(ILogger<TareaController> logger)
+    public TareaController(ILogger<TareaController> logger, ITareaRepository tareaRepository)
     {
         _logger = logger;
-        tareaRepository = new TareaRepository();
+        _tareaRepository = new TareaRepository();
     }
 
     [HttpPost("crearTarea")]
@@ -32,13 +32,14 @@ public class TareaController : Controller
             IdUsuarioAsignado = task.IdUsuarioAsignado,
 
         };
-        tareaRepository.CreateTask(boardId, tarea);
+        _tareaRepository.CreateTask(boardId, tarea);
         return RedirectToAction("Index");
     }
 
     [HttpGet("crearTarea")]
     public IActionResult Crear(int boardId)
     {
+        if(!ModelState.IsValid) return RedirectToAction("Index", "Home");
         if (LoginHelper.IsLogged(HttpContext))
         {
             Tarea tarea = new()
@@ -60,7 +61,7 @@ public class TareaController : Controller
     {
         if (LoginHelper.IsLogged(HttpContext))
         {
-            List<Tarea> tasks = tareaRepository.ListTareas();
+            List<Tarea> tasks = _tareaRepository.ListTareas();
 
             List<ListarTareasViewModel> tareas = new();
 
@@ -87,7 +88,7 @@ public class TareaController : Controller
     {
         if (LoginHelper.IsLogged(HttpContext))
         {
-            List<Tarea> tasks = tareaRepository.GetTasksByBoard(boardId);
+            List<Tarea> tasks = _tareaRepository.GetTasksByBoard(boardId);
 
             List<ListarTareasViewModel> tareas = new();
 
@@ -114,7 +115,7 @@ public class TareaController : Controller
     {
         if (LoginHelper.IsLogged(HttpContext))
         {
-            List<Tarea> tasks = tareaRepository.GetTasksByUser(userId);
+            List<Tarea> tasks = _tareaRepository.GetTasksByUser(userId);
 
             List<ListarTareasViewModel> tareas = new();
 
@@ -141,11 +142,11 @@ public class TareaController : Controller
     {
         if (LoginHelper.IsLogged(HttpContext))
         {
-            var task = tareaRepository.GetTaskById(id);
+            var task = _tareaRepository.GetTaskById(id);
 
             if (task.Id == 0) return NotFound($"No existe el tablero con ID {id}");
 
-            tareaRepository.DeleteTaskById(id);
+            _tareaRepository.DeleteTaskById(id);
 
             return RedirectToAction("Index");
         }
@@ -155,9 +156,10 @@ public class TareaController : Controller
     [HttpGet("editarTarea/{id}")]
     public IActionResult Editar(int id)
     {
+        if(!ModelState.IsValid) return RedirectToAction("Index", "Home");
         if (LoginHelper.IsLogged(HttpContext))
         {
-            var task = tareaRepository.GetTaskById(id);
+            var task = _tareaRepository.GetTaskById(id);
 
             if (task.Id == 0)
             {
@@ -194,14 +196,14 @@ public class TareaController : Controller
 
             };
             
-            var existingTask = tareaRepository.GetTaskById(id);
+            var existingTask = _tareaRepository.GetTaskById(id);
 
             if (existingTask.Id == 0)
             {
                 return NotFound($"No se encontró el tablero con ID {id}");
             }
 
-            tareaRepository.UpdateTask(id, newTask);
+            _tareaRepository.UpdateTask(id, newTask);
 
             return RedirectToAction("Index");
         }
