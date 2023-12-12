@@ -11,12 +11,14 @@ namespace tl2_tp10_2023_Santincho.Controllers;
 public class TareaController : Controller
 {
     private readonly ITareaRepository _tareaRepository;
+    private readonly IUsuarioRepository _usuarioRepository;
     private readonly ILogger<TareaController> _logger;
 
-    public TareaController(ILogger<TareaController> logger, ITareaRepository tareaRepository)
+    public TareaController(ILogger<TareaController> logger, ITareaRepository tareaRepository, IUsuarioRepository usuarioRepository)
     {
         _logger = logger;
         _tareaRepository = tareaRepository;
+        _usuarioRepository = usuarioRepository;
     }
 
     [HttpPost("crearTarea")]
@@ -85,6 +87,7 @@ public class TareaController : Controller
             if (LoginHelper.IsLogged(HttpContext))
             {
                 List<Tarea> tasks = _tareaRepository.ListTareas();
+                var user = _usuarioRepository.GetUserById(int.Parse(LoginHelper.GetUserId(HttpContext)));
 
                 List<ListarTareasViewModel> tareas = new();
 
@@ -97,8 +100,9 @@ public class TareaController : Controller
                         Nombre = task.Nombre,
                         Descripcion = task.Descripcion,
                         Color = task.Color,
-                        IdUsuarioAsignado = task.IdUsuarioAsignado
                     };
+                    if (user.Id == 0) tarea.UsuarioAsignado = "";
+                    else tarea.UsuarioAsignado = user.NombreDeUsuario;
                     tareas.Add(tarea);
                 }
 

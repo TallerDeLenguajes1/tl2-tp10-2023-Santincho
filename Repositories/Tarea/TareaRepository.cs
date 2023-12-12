@@ -72,67 +72,79 @@ public class TareaRepository : ITareaRepository
     }
 
     public List<Tarea> GetTasksByUser(int userId) {
-        var tasks = new List<Tarea>();
-        var query =  @"SELECT * FROM tarea WHERE id_usuario_asignado = @userId";
-        using (var connection = new SQLiteConnection(_connectionString))
+        try
         {
-            var command = new SQLiteCommand(query, connection);
-            command.Parameters.Add(new SQLiteParameter("@userId", userId));
-            connection.Open();
-            using (SQLiteDataReader reader = command.ExecuteReader())
+            var tasks = new List<Tarea>();
+            var query =  @"SELECT * FROM tarea WHERE id_usuario_asignado = @userId";
+            using (var connection = new SQLiteConnection(_connectionString))
             {
-                
-                while (reader.Read())
+                var command = new SQLiteCommand(query, connection);
+                command.Parameters.Add(new SQLiteParameter("@userId", userId));
+                connection.Open();
+                using (SQLiteDataReader reader = command.ExecuteReader())
                 {
-                    var task = new Tarea()
+                    
+                    while (reader.Read())
                     {
-                        Id = Convert.ToInt32(reader["id"]),
-                        IdTablero = Convert.ToInt32(reader["id_tablero"]),
-                        Nombre = reader["nombre"].ToString(),
-                        Estado = (EstadoTarea)Convert.ToInt32(reader["estado"]),
-                        Descripcion = reader["descripcion"].ToString(),
-                        Color = reader["color"].ToString(),
-                        IdUsuarioAsignado = Convert.ToInt32(reader["id_usuario_asignado"])
-                    };
-                    tasks.Add(task);
+                        var task = new Tarea()
+                        {
+                            Id = Convert.ToInt32(reader["id"]),
+                            IdTablero = Convert.ToInt32(reader["id_tablero"]),
+                            Nombre = reader["nombre"].ToString(),
+                            Estado = (EstadoTarea)Convert.ToInt32(reader["estado"]),
+                            Descripcion = reader["descripcion"].ToString(),
+                            Color = reader["color"].ToString(),
+                            IdUsuarioAsignado = Convert.ToInt32(reader["id_usuario_asignado"])
+                        };
+                        tasks.Add(task);
+                    }
                 }
+                connection.Close();
             }
-            connection.Close();
-            if (tasks.Count == 0 && !TasksExistInDatabase()) throw new Exception("No se pudo conseguir la lista de tareas");
+            return tasks;
         }
-        return tasks;
+        catch (System.Exception)
+        {
+            throw new Exception("No se pudo conseguir la lista de tareas");
+        }
     }
 
     public List<Tarea> GetTasksByBoard(int boardId) {
         var tasks = new List<Tarea>();
-        var query =  @"SELECT * FROM tarea WHERE id_tablero = @boardId";
-        using (var connection = new SQLiteConnection(_connectionString))
+        try
         {
-            var command = new SQLiteCommand(query, connection);
-            command.Parameters.Add(new SQLiteParameter("@boardId", boardId));
-            connection.Open();
-            using (SQLiteDataReader reader = command.ExecuteReader())
+            var query =  @"SELECT * FROM tarea WHERE id_tablero = @boardId";
+            using (var connection = new SQLiteConnection(_connectionString))
             {
-                
-                while (reader.Read())
+                var command = new SQLiteCommand(query, connection);
+                command.Parameters.Add(new SQLiteParameter("@boardId", boardId));
+                connection.Open();
+                using (SQLiteDataReader reader = command.ExecuteReader())
                 {
-                    var task = new Tarea()
+                    
+                    while (reader.Read())
                     {
-                        Id = Convert.ToInt32(reader["id"]),
-                        IdTablero = Convert.ToInt32(reader["id_tablero"]),
-                        Nombre = reader["nombre"].ToString(),
-                        Estado = (EstadoTarea)Convert.ToInt32(reader["estado"]),
-                        Descripcion = reader["descripcion"].ToString(),
-                        Color = reader["color"].ToString(),
-                        IdUsuarioAsignado = Convert.ToInt32(reader["id_usuario_asignado"])
-                    };
-                    tasks.Add(task);
+                        var task = new Tarea()
+                        {
+                            Id = Convert.ToInt32(reader["id"]),
+                            IdTablero = Convert.ToInt32(reader["id_tablero"]),
+                            Nombre = reader["nombre"].ToString(),
+                            Estado = (EstadoTarea)Convert.ToInt32(reader["estado"]),
+                            Descripcion = reader["descripcion"].ToString(),
+                            Color = reader["color"].ToString(),
+                            IdUsuarioAsignado = Convert.ToInt32(reader["id_usuario_asignado"])
+                        };
+                        tasks.Add(task);
+                    }
                 }
+                connection.Close();
             }
-            connection.Close();
-            if (tasks.Count == 0 && !TasksExistInDatabase()) throw new Exception("No se pudo conseguir la lista de tareas");
+            return tasks;
         }
-        return tasks;
+        catch (System.Exception)
+        {
+            throw new Exception("No se pudo conseguir la lista de tareas");
+        }
     }
 
     public void DeleteTaskById(int id) {
@@ -162,34 +174,40 @@ public class TareaRepository : ITareaRepository
     }
 
     public List<Tarea> ListTareas() {
-        var tasks = new List<Tarea>();
-        var query =  @"SELECT * FROM tarea";
-        using (var connection = new SQLiteConnection(_connectionString))
+        try
         {
-            var command = new SQLiteCommand(query, connection);
-            connection.Open();
-            using (SQLiteDataReader reader = command.ExecuteReader())
+            var tasks = new List<Tarea>();
+            var query =  @"SELECT * FROM tarea";
+            using (var connection = new SQLiteConnection(_connectionString))
             {
-                
-                while (reader.Read())
+                var command = new SQLiteCommand(query, connection);
+                connection.Open();
+                using (SQLiteDataReader reader = command.ExecuteReader())
                 {
-                    var task = new Tarea()
+                    
+                    while (reader.Read())
                     {
-                        Id = Convert.ToInt32(reader["id"]),
-                        IdTablero = Convert.ToInt32(reader["id_tablero"]),
-                        Nombre = reader["nombre"].ToString(),
-                        Estado = (EstadoTarea)Convert.ToInt32(reader["estado"]),
-                        Descripcion = reader["descripcion"].ToString(),
-                        Color = reader["color"].ToString(),
-                        IdUsuarioAsignado = Convert.ToInt32(reader["id_usuario_asignado"])
-                    };
-                    tasks.Add(task);
+                        var task = new Tarea()
+                        {
+                            Id = Convert.ToInt32(reader["id"]),
+                            IdTablero = Convert.ToInt32(reader["id_tablero"]),
+                            Nombre = reader["nombre"].ToString(),
+                            Estado = (EstadoTarea)Convert.ToInt32(reader["estado"]),
+                            Descripcion = reader["descripcion"].ToString(),
+                            Color = reader["color"].ToString(),
+                            IdUsuarioAsignado = Convert.ToInt32(reader["id_usuario_asignado"])
+                        };
+                        tasks.Add(task);
+                    }
                 }
+                connection.Close();
             }
-            connection.Close();
-            if (tasks.Count == 0 && !TasksExistInDatabase()) throw new Exception("No se pudo conseguir la lista de tareas");
+            return tasks;
         }
-        return tasks;
+        catch (System.Exception)
+        {
+            throw new Exception("No se pudo conseguir la lista de tareas");
+        }
     }
 
     private bool TasksExistInDatabase()

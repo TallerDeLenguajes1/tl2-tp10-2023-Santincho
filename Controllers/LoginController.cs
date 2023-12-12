@@ -49,7 +49,7 @@ public class LoginController : Controller
             }
             else
             {
-                _logger.LogInformation($"Intento de acceso invalido - Usuario: {loginModel.Username}  Clava ingresada: {loginModel.Password}");
+                _logger.LogWarning($"Intento de acceso invalido - Usuario: {loginModel.Username}  Clava ingresada: {loginModel.Password}");
                 return View("Index");
             }
         }

@@ -35,6 +35,7 @@ public class TableroController : Controller
             Tablero tablero = new() {
                 Nombre = board.Nombre,
                 Descripcion = board.Descripcion,
+                IdUsuarioPropietario = board.IdUsuarioPropietario
             };
 
             if (!LoginHelper.IsAdmin(HttpContext))
