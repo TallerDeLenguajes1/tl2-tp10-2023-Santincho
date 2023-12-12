@@ -16,6 +16,10 @@ build_property.GenerateRazorMetadataSourceChecksumAttributes =
 build_property.MSBuildProjectDirectory = c:\Users\pc\Desktop\Facultad\Taller2\tl2-tp10-2023-Santincho
 build_property._RazorSourceGeneratorDebug = 
 
+[c:/Users/pc/Desktop/Facultad/Taller2/tl2-tp10-2023-Santincho/Views/Home/Error.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxFcnJvci5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
 [c:/Users/pc/Desktop/Facultad/Taller2/tl2-tp10-2023-Santincho/Views/Home/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxJbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 

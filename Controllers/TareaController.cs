@@ -22,106 +22,219 @@ public class TareaController : Controller
     [HttpPost("crearTarea")]
     public IActionResult Crear(int boardId, [FromForm] CrearTareaViewModel task)
     {
-        Tarea tarea = new(){
-            Id = task.Id,
-            IdTablero = task.IdTablero,
-            Color = task.Color,
-            Nombre = task.Nombre,
-            Descripcion = task.Descripcion,
-            Estado = task.Estado,
-            IdUsuarioAsignado = task.IdUsuarioAsignado,
+        try
+        {
+            Tarea tarea = new(){
+                Id = task.Id,
+                IdTablero = task.IdTablero,
+                Color = task.Color,
+                Nombre = task.Nombre,
+                Descripcion = task.Descripcion,
+                Estado = task.Estado,
+                IdUsuarioAsignado = task.IdUsuarioAsignado,
 
-        };
-        _tareaRepository.CreateTask(boardId, tarea);
-        return RedirectToAction("Index");
+            };
+            _tareaRepository.CreateTask(boardId, tarea);
+            return RedirectToAction("Index");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex.ToString());
+            TempData["ErrorMessage"] = ex.Message;
+            TempData["StackTrace"] = ex.StackTrace;
+            return RedirectToAction("Error", "Home");
+        }
+        
     }
 
     [HttpGet("crearTarea")]
     public IActionResult Crear(int boardId)
     {
-        if(!ModelState.IsValid) return RedirectToAction("Index", "Home");
-        if (LoginHelper.IsLogged(HttpContext))
+        try
         {
-            Tarea tarea = new()
+             if(!ModelState.IsValid) return RedirectToAction("Index", "Home");
+            if (LoginHelper.IsLogged(HttpContext))
             {
-                IdTablero = boardId
-            };
+                Tarea tarea = new()
+                {
+                    IdTablero = boardId
+                };
 
-            CrearTareaViewModel task = new(){
-                IdTablero = tarea.IdTablero
-            };
+                CrearTareaViewModel task = new(){
+                    IdTablero = tarea.IdTablero
+                };
 
-            return View(task);
+                return View(task);
+            }
+            return RedirectToAction("Index", "Login");
         }
-        return RedirectToAction("Index", "Login");
+        catch (Exception ex)
+        {
+            _logger.LogError(ex.ToString());
+            TempData["ErrorMessage"] = ex.Message;
+            TempData["StackTrace"] = ex.StackTrace;
+            return RedirectToAction("Error", "Home");
+        }
     }
 
     [HttpGet]
     public IActionResult Index()
     {
-        if (LoginHelper.IsLogged(HttpContext))
+        try
         {
-            List<Tarea> tasks = _tareaRepository.ListTareas();
-
-            List<ListarTareasViewModel> tareas = new();
-
-            foreach (var task in tasks)
+            if (LoginHelper.IsLogged(HttpContext))
             {
-                ListarTareasViewModel tarea = new(){
-                    Id = task.Id,
-                    IdTablero = task.IdTablero,
-                    Estado = task.Estado,
-                    Nombre = task.Nombre,
-                    Descripcion = task.Descripcion,
-                    Color = task.Color
-                };
-                tareas.Add(tarea);
-            }
+                List<Tarea> tasks = _tareaRepository.ListTareas();
 
-            return View(tareas);
+                List<ListarTareasViewModel> tareas = new();
+
+                foreach (var task in tasks)
+                {
+                    ListarTareasViewModel tarea = new(){
+                        Id = task.Id,
+                        IdTablero = task.IdTablero,
+                        Estado = task.Estado,
+                        Nombre = task.Nombre,
+                        Descripcion = task.Descripcion,
+                        Color = task.Color,
+                        IdUsuarioAsignado = task.IdUsuarioAsignado
+                    };
+                    tareas.Add(tarea);
+                }
+
+                return View(tareas);
+            }
+            return RedirectToAction("Index", "Login");
         }
-        return RedirectToAction("Index", "Login");
+        catch (Exception ex)
+        {
+            _logger.LogError(ex.ToString());
+            TempData["ErrorMessage"] = ex.Message;
+            TempData["StackTrace"] = ex.StackTrace;
+            return RedirectToAction("Error", "Home");
+        }
+        
     } 
 
     [HttpGet("Tablero/{boardId}")]
     public IActionResult ListByBoard(int boardId)
     {
-        if (LoginHelper.IsLogged(HttpContext))
+        try
         {
-            List<Tarea> tasks = _tareaRepository.GetTasksByBoard(boardId);
-
-            List<ListarTareasViewModel> tareas = new();
-
-            foreach (var task in tasks)
+            if (LoginHelper.IsLogged(HttpContext))
             {
-                ListarTareasViewModel tarea = new(){
-                    Id = task.Id,
-                    IdTablero = task.IdTablero,
-                    Estado = task.Estado,
-                    Nombre = task.Nombre,
-                    Descripcion = task.Descripcion,
-                    Color = task.Color
-                };
-                tareas.Add(tarea);
-            }
+                List<Tarea> tasks = _tareaRepository.GetTasksByBoard(boardId);
 
-            return View(tasks);
+                List<ListarTareasViewModel> tareas = new();
+
+                foreach (var task in tasks)
+                {
+                    ListarTareasViewModel tarea = new(){
+                        Id = task.Id,
+                        IdTablero = task.IdTablero,
+                        Estado = task.Estado,
+                        Nombre = task.Nombre,
+                        Descripcion = task.Descripcion,
+                        Color = task.Color
+                    };
+                    tareas.Add(tarea);
+                }
+
+                return View(tasks);
+            }
+            return RedirectToAction("Index", "Login");
         }
-        return RedirectToAction("Index", "Login");
+        catch (Exception ex)
+        {
+            _logger.LogError(ex.ToString());
+            TempData["ErrorMessage"] = ex.Message;
+            TempData["StackTrace"] = ex.StackTrace;
+            return RedirectToAction("Error", "Home");
+        }
+        
     }
 
     [HttpGet("Usuario/{userId}")]
     public IActionResult ListByUser(int userId)
     {
-        if (LoginHelper.IsLogged(HttpContext))
+        try
         {
-            List<Tarea> tasks = _tareaRepository.GetTasksByUser(userId);
-
-            List<ListarTareasViewModel> tareas = new();
-
-            foreach (var task in tasks)
+            if (LoginHelper.IsLogged(HttpContext))
             {
-                ListarTareasViewModel tarea = new(){
+                List<Tarea> tasks = _tareaRepository.GetTasksByUser(userId);
+
+                List<ListarTareasViewModel> tareas = new();
+
+                foreach (var task in tasks)
+                {
+                    ListarTareasViewModel tarea = new(){
+                        Id = task.Id,
+                        IdTablero = task.IdTablero,
+                        Estado = task.Estado,
+                        Nombre = task.Nombre,
+                        Descripcion = task.Descripcion,
+                        Color = task.Color
+                    };
+                    tareas.Add(tarea);
+                }
+
+                return View(tasks);
+            }
+            return RedirectToAction("Index", "Login");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex.ToString());
+            TempData["ErrorMessage"] = ex.Message;
+            TempData["StackTrace"] = ex.StackTrace;
+            return RedirectToAction("Error", "Home");
+        }
+        
+    } 
+
+    [HttpPost("eliminarTarea/{id}")]
+    public IActionResult Eliminar(int id)
+    {
+        try
+        {
+            if (LoginHelper.IsLogged(HttpContext))
+            {
+                var task = _tareaRepository.GetTaskById(id);
+
+                if (task.Id == 0) return NotFound($"No existe el tablero con ID {id}");
+
+                _tareaRepository.DeleteTaskById(id);
+
+                return RedirectToAction("Index");
+            }
+            return RedirectToAction("Index", "Login");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex.ToString());
+            TempData["ErrorMessage"] = ex.Message;
+            TempData["StackTrace"] = ex.StackTrace;
+            return RedirectToAction("Error", "Home");
+        }
+        
+    }
+
+    [HttpGet("editarTarea/{id}")]
+    public IActionResult Editar(int id)
+    {
+        try
+        {
+            if(!ModelState.IsValid) return RedirectToAction("Index", "Home");
+            if (LoginHelper.IsLogged(HttpContext))
+            {
+                var task = _tareaRepository.GetTaskById(id);
+
+                if (task.Id == 0)
+                {
+                    return NotFound($"No se encontró el tablero con ID {id}");
+                }
+
+                ModificarTareaViewModel tarea = new(){
                     Id = task.Id,
                     IdTablero = task.IdTablero,
                     Estado = task.Estado,
@@ -129,84 +242,59 @@ public class TareaController : Controller
                     Descripcion = task.Descripcion,
                     Color = task.Color
                 };
-                tareas.Add(tarea);
+
+                return View(tarea);
             }
-
-            return View(tasks);
+            return RedirectToAction("Index", "Login");
         }
-        return RedirectToAction("Index", "Login");
-    } 
-
-    [HttpPost("eliminarTarea/{id}")]
-    public IActionResult Eliminar(int id)
-    {
-        if (LoginHelper.IsLogged(HttpContext))
+        catch (Exception ex)
         {
-            var task = _tareaRepository.GetTaskById(id);
-
-            if (task.Id == 0) return NotFound($"No existe el tablero con ID {id}");
-
-            _tareaRepository.DeleteTaskById(id);
-
-            return RedirectToAction("Index");
+            _logger.LogError(ex.ToString());
+            TempData["ErrorMessage"] = ex.Message;
+            TempData["StackTrace"] = ex.StackTrace;
+            return RedirectToAction("Error", "Home");
         }
-        return RedirectToAction("Index", "Login");
-    }
-
-    [HttpGet("editarTarea/{id}")]
-    public IActionResult Editar(int id)
-    {
-        if(!ModelState.IsValid) return RedirectToAction("Index", "Home");
-        if (LoginHelper.IsLogged(HttpContext))
-        {
-            var task = _tareaRepository.GetTaskById(id);
-
-            if (task.Id == 0)
-            {
-                return NotFound($"No se encontró el tablero con ID {id}");
-            }
-
-            ModificarTareaViewModel tarea = new(){
-                Id = task.Id,
-                IdTablero = task.IdTablero,
-                Estado = task.Estado,
-                Nombre = task.Nombre,
-                Descripcion = task.Descripcion,
-                Color = task.Color
-            };
-
-            return View(tarea);
-        }
-        return RedirectToAction("Index", "Login");
+        
     }
 
     [HttpPost("editarTarea/{id}")]
     public IActionResult Editar(int id, [FromForm] ModificarTareaViewModel newTarea)
     {
-        if (LoginHelper.IsLogged(HttpContext))
+        try
         {
-            Tarea newTask = new(){
-                Id = newTarea.Id,
-                IdTablero = newTarea.IdTablero,
-                Color = newTarea.Color,
-                Nombre = newTarea.Nombre,
-                Descripcion = newTarea.Descripcion,
-                Estado = newTarea.Estado,
-                IdUsuarioAsignado = newTarea.IdUsuarioAsignado,
-
-            };
-            
-            var existingTask = _tareaRepository.GetTaskById(id);
-
-            if (existingTask.Id == 0)
+            if (LoginHelper.IsLogged(HttpContext))
             {
-                return NotFound($"No se encontró el tablero con ID {id}");
+                Tarea newTask = new(){
+                    Id = newTarea.Id,
+                    IdTablero = newTarea.IdTablero,
+                    Color = newTarea.Color,
+                    Nombre = newTarea.Nombre,
+                    Descripcion = newTarea.Descripcion,
+                    Estado = newTarea.Estado,
+                    IdUsuarioAsignado = newTarea.IdUsuarioAsignado,
+
+                };
+                
+                var existingTask = _tareaRepository.GetTaskById(id);
+
+                if (existingTask.Id == 0)
+                {
+                    return NotFound($"No se encontró el tablero con ID {id}");
+                }
+
+                _tareaRepository.UpdateTask(id, newTask);
+
+                return RedirectToAction("Index");
             }
-
-            _tareaRepository.UpdateTask(id, newTask);
-
-            return RedirectToAction("Index");
+            return RedirectToAction("Index", "Login");
         }
-        return RedirectToAction("Index", "Login");
+        catch (Exception ex)
+        {
+            _logger.LogError(ex.ToString());
+            TempData["ErrorMessage"] = ex.Message;
+            TempData["StackTrace"] = ex.StackTrace;
+            return RedirectToAction("Error", "Home");
+        }
+        
     }
 }

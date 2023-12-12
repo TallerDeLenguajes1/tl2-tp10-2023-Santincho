@@ -1,5 +1,5 @@
 @using kanban.ViewModels
-@model ListarTablerosViewModel
+@model CrearTableroViewModel
 
 <form asp-controller="Tablero" asp-action="Crear" method="post">
     <div class="mb-3">
@@ -14,9 +14,10 @@
 
 
     <div class="mb-3">
-        <label for="idUsuarioPropietario" class="form-label" asp-for="UsuarioPropietario">ID Usuario Propietario:
-        </label>
-        <input type="number" class="form-control" id="idUsuarioPropietario" asp-for="UsuarioPropietario">
+        <label for="Usuario" class="form-label" asp-for="IdUsuarioPropietario">Usuario propietario: </label>
+        <select asp-for="IdUsuarioPropietario" asp-items="@ViewBag.Users">
+            <option value="">Selecciona un usuario</option>
+        </select>
     </div>
 
 

@@ -5,6 +5,7 @@ using kanban.Controllers.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using tl2_tp10_2023_Santincho.Models;
 using kanban.ViewModels;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace tl2_tp10_2023_Santincho.Controllers;
 
@@ -12,13 +13,16 @@ public class TableroController : Controller
 {
     private readonly ITableroRepository _tableroRepository;
     private readonly ITareaRepository _tareaRepository;
+    private readonly IUsuarioRepository _usuarioRepository;
     private readonly ILogger<TableroController> _logger;
 
-    public TableroController(ILogger<TableroController> logger, ITareaRepository tareaRepository, ITableroRepository tableroRepository)
+    public TableroController(ILogger<TableroController> logger, ITareaRepository tareaRepository, 
+    ITableroRepository tableroRepository, IUsuarioRepository usuarioRepository)
     {
         _logger = logger;
         _tableroRepository = tableroRepository;
         _tareaRepository = tareaRepository;
+        _usuarioRepository = usuarioRepository;
     }
 
     [HttpPost("crearTablero")]
@@ -60,9 +64,14 @@ public class TableroController : Controller
             if(!ModelState.IsValid) return RedirectToAction("Index", "Home");
             if (!LoginHelper.IsLogged(HttpContext)) return RedirectToAction("Index", "Login");
 
+            var usuarios = _usuarioRepository.UsersList();
+            var usuariosList = new SelectList(usuarios, "Id", "NombreDeUsuario");
+
             CrearTableroViewModel crearTableroViewModel = new() {
                 IsAdmin = LoginHelper.IsAdmin(HttpContext)
             };
+
+            ViewBag.Users = usuariosList;
             return View(crearTableroViewModel);
         }
         catch (Exception ex)
@@ -88,13 +97,21 @@ public class TableroController : Controller
             
             if (ViewBag.EsAdmin) boards = _tableroRepository.ListBoards();
 
-            else boards = _tableroRepository.GetBoardsByUser(int.Parse(LoginHelper.GetUserId(HttpContext)));
+            else boards = _tableroRepository.GetBoardsByUser(Convert.ToInt32(LoginHelper.GetUserId(HttpContext)));
 
             List<ListarTablerosViewModel> tableros = new();
 
             foreach (var board in boards)
             {
-                ListarTablerosViewModel tablero = new(board.Nombre, board.Descripcion, board.Id, board.IdUsuarioPropietario);
+                var user = _usuarioRepository.GetUserById(board.IdUsuarioPropietario);
+                ListarTablerosViewModel tablero = new()
+                {
+                    Id = board.Id,
+                    Nombre = board.Nombre,
+                    Descripcion = board.Descripcion
+                };
+                if (user.Id == 0) tablero.UsuarioPropietario = "";
+                else tablero.UsuarioPropietario = user.NombreDeUsuario;
                 tableros.Add(tablero);
             }
 

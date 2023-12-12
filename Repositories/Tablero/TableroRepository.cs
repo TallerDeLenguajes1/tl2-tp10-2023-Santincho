@@ -42,34 +42,39 @@ public class TableroRepository : ITableroRepository
         connection.Close();
     }
     public List<Tablero> ListBoards() {
-        var boards = new List<Tablero>();
-        var query = @"SELECT * FROM tablero";
-        using (var connection = new SQLiteConnection(_connectionString))
+        try
         {
-            var command = new SQLiteCommand(query, connection);
-            connection.Open();
-
-            using (SQLiteDataReader reader = command.ExecuteReader())
+            var boards = new List<Tablero>();
+            var query = @"SELECT * FROM tablero";
+            using (var connection = new SQLiteConnection(_connectionString))
             {
-                while (reader.Read())
+                var command = new SQLiteCommand(query, connection);
+                connection.Open();
+
+                using (SQLiteDataReader reader = command.ExecuteReader())
                 {
-                    var board = new Tablero
+                    while (reader.Read())
                     {
-                        Id = Convert.ToInt32(reader["id"]),
-                        IdUsuarioPropietario = Convert.ToInt32(reader["id_usuario_propietario"]),
-                        Nombre = reader["nombre"].ToString(),
-                        Descripcion = reader["descripcion"].ToString()
-                    };
-                    boards.Add(board);
+                        var board = new Tablero
+                        {
+                            Id = Convert.ToInt32(reader["id"]),
+                            IdUsuarioPropietario = Convert.ToInt32(reader["id_usuario_propietario"]),
+                            Nombre = reader["nombre"].ToString(),
+                            Descripcion = reader["descripcion"].ToString()
+                        };
+                        boards.Add(board);
+                    }
                 }
+                connection.Close();
             }
-            connection.Close();
+            return boards;
         }
-        if (boards.Count == 0 && !BoardsExistInDatabase())
+        catch (System.Exception)
         {
             throw new Exception("No se pudo conseguir la lista de tableros");
         }
-        return boards;
+        
+        
     }
     public Tablero GetTableroById(int id) {
         var board = new Tablero();
@@ -95,31 +100,35 @@ public class TableroRepository : ITableroRepository
         return board;
     }
     public List<Tablero> GetBoardsByUser(int userId) {
-        var boards = new List<Tablero>();
-        using (var connection = new SQLiteConnection(_connectionString))
+        try
         {
-            var command = connection.CreateCommand();
-            command.CommandText = "SELECT * FROM tablero WHERE id_usuario_propietario = @ownerUserId";
-            command.Parameters.Add(new SQLiteParameter("@ownerUserId", userId));
-            connection.Open();
-            using (SQLiteDataReader reader = command.ExecuteReader())
+            var boards = new List<Tablero>();
+            using (var connection = new SQLiteConnection(_connectionString))
             {
-                while (reader.Read())
+                var command = connection.CreateCommand();
+                command.CommandText = "SELECT * FROM tablero WHERE id_usuario_propietario = @ownerUserId";
+                command.Parameters.Add(new SQLiteParameter("@ownerUserId", userId));
+                connection.Open();
+                using (SQLiteDataReader reader = command.ExecuteReader())
                 {
-                    var board = new Tablero {
-                        IdUsuarioPropietario = Convert.ToInt32(reader["id_usuario_propietario"]),
-                        Nombre = reader["nombre"].ToString(),
-                        Descripcion = reader["descripcion"].ToString()
-                    };
-                    boards.Add(board);
+                    while (reader.Read())
+                    {
+                        var board = new Tablero {
+                            IdUsuarioPropietario = Convert.ToInt32(reader["id_usuario_propietario"]),
+                            Nombre = reader["nombre"].ToString(),
+                            Descripcion = reader["descripcion"].ToString()
+                        };
+                        boards.Add(board);
+                    }
                 }
             }
+            return boards;
         }
-        if (boards.Count == 0 && !BoardsExistInDatabase())
+        catch (System.Exception)
         {
             throw new Exception("No se pudo conseguir la lista de tableros");
         }
-        return boards;
+        
     }
     public void DeleteBoardById(int id) {
         var connection = new SQLiteConnection(_connectionString);
@@ -132,20 +141,4 @@ public class TableroRepository : ITableroRepository
         connection.Close();
     }
 
-    private bool BoardsExistInDatabase()
-    {
-        // Realiza una consulta para verificar si existen tableros en la base de datos
-        var query = @"SELECT COUNT(*) FROM tablero";
-        using (var connection = new SQLiteConnection(_connectionString))
-        {
-            var command = new SQLiteCommand(query, connection);
-            connection.Open();
-
-            int count = (int)command.ExecuteScalar();
-
-            connection.Close();
-
-            return count > 0;
-        }
-    }
 }

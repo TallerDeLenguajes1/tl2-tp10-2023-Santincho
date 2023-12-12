@@ -24,32 +24,47 @@ public class LoginController : Controller
     [HttpPost]
     public IActionResult Login(LoginViewModel loginModel)
     {
-        var sessionUsername = LoginHelper.GetUserName(HttpContext);
-        var sessionId = LoginHelper.GetUserId(HttpContext);
-
-        if (!string.IsNullOrEmpty(sessionUsername) && !string.IsNullOrEmpty(sessionId))
+        try
         {
-            var sessionUser = _usuarioRepository.GetUserById(int.Parse(sessionId));
-            if (sessionUser.NombreDeUsuario == loginModel.Username)
+            var sessionUsername = LoginHelper.GetUserName(HttpContext);
+            var sessionId = LoginHelper.GetUserId(HttpContext);
+
+            if (!string.IsNullOrEmpty(sessionUsername) && !string.IsNullOrEmpty(sessionId))
             {
+                var sessionUser = _usuarioRepository.GetUserById(int.Parse(sessionId));
+                if (sessionUser.NombreDeUsuario == loginModel.Username)
+                {
+                    _logger.LogInformation($"El usuario {loginModel.Username} ingreso correctamente");
+                    return RedirectToAction("Index", "Home");
+                }
+            }
+
+            var userFound = _usuarioRepository.GetByUsername(loginModel.Username);
+
+            if (userFound != null && userFound.Contrasenia == loginModel.Password)
+            {
+                LogInUser(userFound);
                 _logger.LogInformation($"El usuario {loginModel.Username} ingreso correctamente");
                 return RedirectToAction("Index", "Home");
             }
+            else
+            {
+                _logger.LogInformation($"Intento de acceso invalido - Usuario: {loginModel.Username}  Clava ingresada: {loginModel.Password}");
+                return View("Index");
+            }
         }
-
-        var userFound = _usuarioRepository.GetByUsername(loginModel.Username);
-
-        if (userFound != null && userFound.Contrasenia == loginModel.Password)
+        catch (Exception ex)
         {
-            LogInUser(userFound);
-            _logger.LogInformation($"El usuario {loginModel.Username} ingreso correctamente");
-            return RedirectToAction("Index", "Home");
+            _logger.LogError(ex.ToString());
+            return RedirectToRoute(new { controller = "Login", action = "Index" });
         }
-        else
-        {
-            _logger.LogInformation($"Intento de acceso invalido - Usuario: {loginModel.Username}  Clava ingresada: {loginModel.Password}");
-            return View("Index");
-        }
+        
+    }
+
+    public IActionResult Logout()
+    {
+        HttpContext.Session.Clear(); 
+        return RedirectToAction("Index", "Home"); 
     }
 
     private void LogInUser(Usuario user)
